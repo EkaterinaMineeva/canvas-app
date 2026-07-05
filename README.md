@@ -69,6 +69,6 @@ npm run dev
 
 ## Архитектура тестовой папки (`/tests`)
 Проект содержит:
-* `tests/pages/CanvasPage.ts` — папка с класом страницы приложения.
-* `tests/fixtures/canvas-fixture.ts` — папка с кастомными фикстурами.
+* `tests/pages/CanvasPage.ts` — папка с классом страницы приложения.
+* `tests/fixtures/canvas-fixture.ts` — папка с кастомной фикстурой.
 * `tests/shape-generation.spec` — сам тест.
