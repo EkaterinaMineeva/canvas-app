@@ -1,75 +1,74 @@
-# React + TypeScript + Vite
+# Canvas Single Page Application with E2E Visual Automation
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Тестовое задание по созданию моностраничного веб-приложения со случайной генерацией фигур на Canvas и скриншот автотестами.
 
-Currently, two official plugins are available:
+## Стек технологий
+* **Frontend**: React 18+ (Functional Components, Hooks), TypeScript, Vite (HMR), CSS3.
+* **Automation QA**: Playwright, Page Object Model (POM), Кастомные Фикстуры (Fixtures), HTML-репортер.
+* **Линтинг/Форматирование**: ESLint (строгая конфигурация TypeScript без использования `any`).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## Выполненные требования ТЗ
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. **Моностраничное приложение**: Интерфейс развернут на весь экран (`100vw` / `100vh`), поверх холста зафиксирована кнопка управления "Show / Hide".
+2. **Динамический Canvas**: По нажатию на кнопку приложение генерирует случайную базовую фигуру (Круг, Квадрат или Равносторонний треугольник) случайного цвета, которая рендерится строго по её геометрическому центру масс (медиане).
+3. **Усложнение (Пункт 5)**: Внутри базовых фигур независимо и абсолютно случайно генерируется контрастный внутренний объект (Крестик, Кольцо или Круг).
+4. **Автономное визуальное тестирование**: Написаны E2E скриншотные тесты. Тесты функционируют в режиме **Black Box (Черного ящика)** — они считывают DOM-маркеры параметров и никак не влияют на внутреннее состояние или логику работы самого React-приложения.
+5. **Изоляция вложенных объектов**: Реализован продвинутый механизм маскирования. Во время визуального теста центральная область детали закрашивается динамической круглой маской (`border-radius: 50%`) под цвет фона холста (`#121212`). Тест оценивает **исключительно форму и цвет основной родительской фигуры**, полностью игнорируя рандомное внутреннее наполнение и удовлетворяя жестким условиям ТЗ со строгим лимитом пикселей (`maxDiffPixels: 20`).
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Инструкция по локальному запуску
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Для запуска проекта на вашем компьютере должны быть установлены **Node.js** (v18+) и **Git**.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+### 1. Клонирование репозитория и установка зависимостей
+```bash
+git clone https://github.com
+cd canvas-app
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+### 2. Первичная настройка тестовых браузеров
+При первом запуске тестов необходимо скачать бинарные файлы изолированных браузеров Playwright:
+```bash
+npx playwright install
 ```
+
+### 3. Запуск приложения в режиме разработки
+```bash
+npm run dev
+```
+После запуска приложение будет доступно в браузере по адресу: `http://localhost:5173/`.
+
+---
+
+## Запуск автоматизированных тестов
+
+Проект содержит файл `playwright.config.ts`, который **автоматически поднимает локальный сервер Vite перед стартом тестов**, поэтому вручную запускать команду `npm run dev` перед тестами не требуется.
+
+* **Запуск тестов**:
+  ```bash
+  npx playwright test
+  ```
+  *Если сгенерированная фигура совпадет по цвету и форме хотя бы с одним из сохраненных эталонов — тест автоматически закрасит внутреннюю деталь маской, проверит внешний контур и завершится успехом.*
+
+* **Обновление скриншотов-эталонов**:
+  ```bash
+  npx playwright test --update-snapshots
+  ```
+  *Приложение автоматически распознает флаг обновления, скроет белые детали на холсте и запишет идеально чистые геометрические фигуры в файлы-эталоны.*
+
+* **Просмотр детального HTML-отчета**:
+  ```bash
+  npx playwright show-report
+  ```
+
+---
+
+## Архитектура тестовой папки (`/tests`)
+Проект содержит:
+* `tests/pages/CanvasPage.ts` — папка с класом страницы приложения.
+* `tests/fixtures/canvas-fixture.ts` — папка с кастомными фикстурами.
+* `tests/shape-generation.spec` — сам тест.
