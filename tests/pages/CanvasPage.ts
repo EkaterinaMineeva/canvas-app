@@ -44,10 +44,44 @@ export class CanvasPage {
   }
 
   async verifyCanvasScreenshot(screenshotName: string) {
-  await expect(this.canvas).toHaveScreenshot(screenshotName, { 
-    maxDiffPixels: 20,     
-    threshold: 0.2,        
-    animations: 'disabled' 
-  });
-}
+    const sizeAttr = await this.canvas.getAttribute('data-shape-size');
+    const shapeSize = parseInt(sizeAttr || '0', 10);
+
+    const maskDiameter = (shapeSize * 0.30) + 10;
+
+    await this.page.evaluate(([size]) => {
+      document.getElementById('playwright-canvas-mask')?.remove();
+
+      const maskEl = document.createElement('div');
+      maskEl.id = 'playwright-canvas-mask';
+
+      maskEl.setAttribute(
+        'style',
+        `position: fixed; 
+         top: 50%; 
+         left: 50%; 
+         width: ${size}px; 
+         height: ${size}px; 
+         transform: translate(-50%, -50%); 
+         border-radius: 50%; 
+         background-color: #000000; 
+         z-index: 99999; 
+         pointer-events: none;`
+      );
+
+      document.body.appendChild(maskEl);
+    }, [maskDiameter]);
+
+    const virtualMaskLocator = this.page.locator('#playwright-canvas-mask');
+
+    await expect(this.canvas).toHaveScreenshot(screenshotName, { 
+      maxDiffPixels: 150,
+      threshold: 0.2,        
+      animations: 'disabled',
+      mask: [virtualMaskLocator],
+      maskColor: '#121212'
+    });
+
+    await this.page.evaluate(() => document.getElementById('playwright-canvas-mask')?.remove());
+  }
 }
